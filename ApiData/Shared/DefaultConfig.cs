@@ -8,6 +8,6 @@ namespace ApiData.Shared
 {
     public static class DefaultConfig
     {
-        public static string ConnectionString { get; } = "Server=tcp:;Initial Catalog=;Persist Security Info=True;User ID=;Password=;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=True;Connection Timeout=300;";
+        public static string ConnectionString { get; } = "Data Source=SQL5110.site4now.net;Initial Catalog=db_a42351_demo;User Id=db_a42351_demo_admin;Password=Chbm0767ch;Connect Timeout=3000";
     }
 }

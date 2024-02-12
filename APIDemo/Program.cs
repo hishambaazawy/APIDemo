@@ -7,6 +7,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using System.Reflection;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Controller;
+using APIDemo.Controllers;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = Environments.Development });
 //Staging Environment 
@@ -18,7 +24,14 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .ReadFrom.Services(services)
     .MinimumLevel.Verbose());
-
+builder.Services.AddApiVersioning(
+  options =>
+  {
+      options.ReportApiVersions = true;
+      options.Conventions.Controller<AccountController>().HasApiVersion(new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0));
+      options.Conventions.Controller<GroupsController>().HasApiVersion(new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0));
+  }
+);
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 builder.Services.Configure<JwtSettings>(jwtSettings);
 builder.Services.AddAuthentication(options =>
@@ -55,13 +68,16 @@ builder.Services.AddDbContext<SmartChargingContext>(options => options.UseSqlSer
 
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+    c.SwaggerDoc("V1", new OpenApiInfo() { Title = "API V1", Version = "V1.0" });
+    c.SwaggerDoc("V2", new OpenApiInfo() { Title = "API V2", Version = "V2.0" });
+    c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
+    c.CustomSchemaIds(x => x.FullName);
 
     // Configure Swagger to use JWT
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
-        Description = "Please insert JWT token into field",
+        Description = "Please insert Bearer + JWT token into this field (To Get Token Check Account/Login)",
         Name = "Authorization",
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
@@ -80,7 +96,7 @@ builder.Services.AddSwaggerGen(c =>
            Name = "Bearer",
            In = ParameterLocation.Header,
          },
-         new List<string>()
+            new List<string>()
        }
     });
 });
@@ -90,16 +106,17 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint($"/swagger/V1/swagger.json", "V1.0");
+        options.SwaggerEndpoint($"/swagger/V2/swagger.json", "V2.0");
+    }
+    );
 }
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseStaticFiles();
-
 app.UseHttpsRedirection();
-
-
-
 app.MapControllers();
 
 app.Run();

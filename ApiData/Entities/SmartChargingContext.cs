@@ -58,9 +58,18 @@ namespace ApiData.Entities
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-             modelBuilder.HasDefaultSchema("dbo");
+            modelBuilder.Entity<Connector>()
+              .HasKey(c => new { c.ConnectorId, c.ChargeStationId }); 
+
+            modelBuilder.Entity<Connector>()
+                .HasOne(c => c.ChargeStation)
+                .WithMany(cs => cs.Connectors)
+                .HasForeignKey(c => c.ChargeStationId);
+
+            modelBuilder.HasDefaultSchema("dbo");
             Seed(modelBuilder);
         }
+       
 
     }
 }

@@ -16,7 +16,7 @@ namespace ApiData.Entities.Data
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [JsonProperty("GroupId")]
-        public int GroupId { get; init; }
+        public int GroupId { get; set; }
         [JsonProperty("Name")]
         public string Name { get; set; }
         [JsonProperty("CapacityInAmps")]
