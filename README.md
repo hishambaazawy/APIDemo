@@ -32,6 +32,10 @@ Use the AccountController/Login endpoint to obtain an authentication token.
 Include the obtained token in the Authorization header for requests to secured endpoints.
 All actions require either a User or Admin role for access.
 
+
+
+
 ## Logs
 this api has 2 log system :
-1- Serilog with MinimumLevel Verbose / rollingInterval : Hour (File save on the root path)
+1. Serilog with MinimumLevel Verbose / rollingInterval : Hour (File save on the root path)
+2. Custom log under wwwroot that allow direct access for error log (host/logs/error.txt)
