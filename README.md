@@ -26,3 +26,8 @@ To access secured endpoints, use the following default login credentials:
   "email": "hisham.baazawy@gmail.com",
   "password": "wYX%0<|HK09"
 }
+
+Authentication
+Use the AccountController/Login endpoint to obtain an authentication token.
+Include the obtained token in the Authorization header for requests to secured endpoints.
+All actions require either a User or Admin role for access.
