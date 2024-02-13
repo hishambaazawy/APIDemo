@@ -48,4 +48,4 @@ To access secured endpoints, use the following default login credentials:
 {
   "email": "hisham.baazawy@gmail.com",
   "password": "wYX%0<|HK09"
-}.
+}
