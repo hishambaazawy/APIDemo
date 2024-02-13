@@ -33,5 +33,6 @@ namespace ApiData.Entities.Data
 
         [JsonProperty("ChargeStation")]
         public virtual ChargeStation? ChargeStation { get; set; }
+
     }
 }

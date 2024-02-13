@@ -9,11 +9,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace ApiData.Migrations
+namespace APIDemo.Migrations
 {
     [DbContext(typeof(SmartChargingContext))]
-    [Migration("20240213075630_FixAudit")]
-    partial class FixAudit
+    [Migration("20240213180315_InitDef")]
+    partial class InitDef
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -72,6 +72,9 @@ namespace ApiData.Migrations
 
                     b.Property<int>("MaxCurrentInAmps")
                         .HasColumnType("int");
+
+                    b.Property<string>("Reference")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ConnectorId", "ChargeStationId");
 

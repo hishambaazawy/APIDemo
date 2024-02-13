@@ -34,11 +34,6 @@ namespace ApiData.Entities
             {
                 if (!string.IsNullOrEmpty(_connectionString))
                     optionsBuilder.UseSqlServer(_connectionString);
-                else
-
-                    optionsBuilder.UseSqlServer("");
-                 optionsBuilder.UseSqlServer(DefaultConfig.ConnectionString);
-
             }
         }
         public void Seed(ModelBuilder modelBuilder)
@@ -68,8 +63,7 @@ namespace ApiData.Entities
 
             modelBuilder.HasDefaultSchema("dbo");
             Seed(modelBuilder);
-        }
-       
+        } 
 
     }
 }
