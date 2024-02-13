@@ -92,6 +92,35 @@ namespace APIDemo.Controllers
             }
         }
 
+        [HttpPost("AddChargeStationWithConnector")]
+        public async Task<GenericResponse<ChargeStation>> AddChargeStationWithConnector([FromBody] ChargeStationModel newStation)
+        {
+            if (newStation != null)
+            {
+                var group = await _context.Groups.FindAsync(newStation.GroupId);
+                if (string.IsNullOrEmpty(newStation.Name) || group == null || newStation.Connector==null || newStation.Connector==null)
+                {
+                    return new GenericResponse<ChargeStation>() { Message = "Invalid Input", Success = false, StatusCode = StatusCodeEnum.Error, Response = null };
+                }
+                else
+                {
+                    if (newStation.Connector.MaxCurrentInAmps <= 0 || (group.CapacityInAmps>=(await helper.GetGroupConnectorAmps(group.GroupId) + newStation.Connector.MaxCurrentInAmps)) ) 
+                    {
+                        return new GenericResponse<ChargeStation>() { Message = "Invalid Connector", Success = false, StatusCode = StatusCodeEnum.Error, Response = null };
+                    }
+                    var station = new ChargeStation() { GroupId = newStation.GroupId, Name = newStation.Name, CreationDate = DateTime.Now, CreatedBy = User.Identity.Name ?? "*" };
+                    station.Connectors.Add(new Connector() { MaxCurrentInAmps = newStation.Connector.MaxCurrentInAmps, CreatedBy = station.CreatedBy, CreationDate = station.CreationDate, Reference = newStation.Connector.Reference });
+                    await _context.ChargeStations.AddAsync(station);
+                    await _context.SaveChangesAsync();
+                    return new GenericResponse<ChargeStation>() { Message = "Success", Success = true, StatusCode = StatusCodeEnum.Success, Response = station };
+                }
+            }
+            else
+            {
+                return new GenericResponse<ChargeStation>() { Message = "Invalid Input", Success = false, StatusCode = StatusCodeEnum.Error, Response = null };
+            }
+        }
+
         [HttpPut("UpdateChargeStation")]
         public async Task<GenericResponse<ChargeStation>> UpdateChargeStation(int id, ChargeStationModel stationInput)
         {

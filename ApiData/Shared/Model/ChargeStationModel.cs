@@ -15,5 +15,7 @@ namespace ApiData.Shared.Model
         [JsonProperty("GroupId")]
         public int GroupId { get; set; }
        
+        public ConnectorModel? Connector { get; set; }
     }
+   
 }
