@@ -28,7 +28,7 @@ To access secured endpoints, use the following default login credentials:
 }
 
 
-Authentication
+## Authentication
 Use the AccountController/Login endpoint to obtain an authentication token.
 Include the obtained token in the Authorization header for requests to secured endpoints.
 All actions require either a User or Admin role for access.
@@ -41,7 +41,7 @@ Custom Log: Accessible under wwwroot, allowing direct access to error logs via (
 
 
 
-Running the Application
+##  Running the Application
 Open a terminal or command prompt.
 Navigate to the project directory.
 Execute dotnet restore to restore necessary packages.
