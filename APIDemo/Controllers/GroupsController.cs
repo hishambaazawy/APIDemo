@@ -15,39 +15,39 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace APIDemo.Controllers
 {
-    //[Route("api/[controller]")]
-    //[ApiController]
     [ApiController]
     [ApiVersion("1.0")]
     [ApiExplorerSettings(GroupName = "V1")]
     [Route("api/public/v{version:apiVersion}/[controller]")]
-    [Authorize(Roles ="Admin,User")]
+    //  [Authorize(Roles ="Admin,User")]
+    [AllowAnonymous]
     public class GroupsController : ControllerBase
     {
         private readonly ILogger<GroupsController> logger;
         private readonly LogsService logsService;
         private readonly SmartChargingContext _context;
-
-        public GroupsController(SmartChargingContext context, LogsService logs, ILogger<GroupsController> llogger)
+        private readonly MyHelper helper;
+        public GroupsController(SmartChargingContext context, LogsService logs, ILogger<GroupsController> llogger, MyHelper _helper)
         {
             _context = context;
             logger = llogger;
             logsService = logs;
+            helper = _helper;
         }
 
         [HttpGet("GetGroups")]
-        public async Task<ActionResult<GenericResponse<IEnumerable<Group>>>> GetGroups()
+        public async Task<GenericResponse<IEnumerable<Group>>> GetGroups()
         {
             return new GenericResponse<IEnumerable<Group>>() { Success=true, Response= await _context.Groups.ToListAsync(), Message= "Success", StatusCode= StatusCodeEnum.Success };
         }
         [HttpGet("GetGroupsWithFullDetails")]
-        public async Task<ActionResult<GenericResponse<IEnumerable<Group>>>> GetGroupsWithFullDetails()
+        public async Task<GenericResponse<IEnumerable<Group>>> GetGroupsWithFullDetails()
         {
             return new GenericResponse<IEnumerable<Group>>() { Success = true, Response = await _context.Groups.Include(x=>x.ChargeStations).ThenInclude(x=>x.Connectors).ToListAsync(), Message = "Success", StatusCode = StatusCodeEnum.Success };
         }
        
         [HttpGet("GetGroupById")]
-        public async Task<ActionResult<GenericResponse<Group>>> GetGroupById(int id)
+        public async Task<GenericResponse<Group>> GetGroupById(int id)
         {
             var Tatgetgroup = await _context.Groups.FindAsync(id);
             if (Tatgetgroup == null)
@@ -58,7 +58,7 @@ namespace APIDemo.Controllers
         }
 
         [HttpGet("GetGroupWithFullDetails")]
-        public async Task<ActionResult<GenericResponse<Group>>> GetGroupWithFullDetails(int id)
+        public async Task<GenericResponse<Group>> GetGroupWithFullDetails(int id)
         {
             var result = await _context.Groups.Include(x => x.ChargeStations).ThenInclude(x => x.Connectors).FirstOrDefaultAsync(x => x.GroupId == id);
             if (result == null)
@@ -83,7 +83,7 @@ namespace APIDemo.Controllers
                 }
                 else
                 {
-                    var group=new Group() { Name=NewGroup.Name, CapacityInAmps=NewGroup.CapacityInAmps };   
+                    var group=new Group() { Name=NewGroup.Name, CapacityInAmps=NewGroup.CapacityInAmps, CreationDate=DateTime.Now, CreatedBy=User.Identity.Name??"*" };   
                     await _context.Groups.AddAsync(group); 
                     await _context.SaveChangesAsync();
                     return new GenericResponse<Group>() { Message = "Success", Success = true, StatusCode = StatusCodeEnum.Success, Response = group };
@@ -112,12 +112,8 @@ namespace APIDemo.Controllers
                     {
                         return new GenericResponse<Group>() { Message = "Invalid Input", Success = false, StatusCode = StatusCodeEnum.Error, Response = null };
                     }
-                    int SumMaxAmps = 0;
-                    foreach(var charge in  group.ChargeStations) 
-                    {
-                        SumMaxAmps += charge.Connectors.Sum(x => x.MaxCurrentInAmps);
-                    }
-                    if (groupInput.CapacityInAmps >= SumMaxAmps)
+                  
+                    if (groupInput.CapacityInAmps >= await helper.GetGroupConnectorAmps(id))
                     {
                         group.Name=groupInput.Name;
                         group.CapacityInAmps = groupInput.CapacityInAmps;
@@ -141,7 +137,6 @@ namespace APIDemo.Controllers
             }
         }
 
-        
         [HttpDelete("DeleteGroup")]
         public async Task<GenericResponse<bool>> DeleteGroup(int id)
         {
@@ -174,11 +169,6 @@ namespace APIDemo.Controllers
                 return new GenericResponse<bool>() { Message = "System Error", Success = false, StatusCode = StatusCodeEnum.Error, Response = false };
             }
             
-        }
-
-        private bool GroupExists(int id)
-        {
-            return _context.Groups.Any(e => e.GroupId == id);
         }
     }
 }

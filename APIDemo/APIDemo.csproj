@@ -43,4 +43,8 @@
     <ProjectReference Include="..\ApiData\ApiData.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\Logs\" />
+  </ItemGroup>
+
 </Project>

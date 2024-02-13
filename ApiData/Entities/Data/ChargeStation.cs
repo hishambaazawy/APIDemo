@@ -25,6 +25,15 @@ namespace ApiData.Entities.Data
         public int GroupId { get; set; }
         [JsonProperty("Group")]
         public virtual Group? Group { get; set; }
+
+
+        [JsonProperty("CreationDate")]
+        public DateTime CreationDate { get; set; } = DateTime.Now;
+
+        [JsonProperty("CreatedBy")]
+        public string CreatedBy { get; set; }
+
+
         [JsonProperty("Connectors")]
         public virtual ICollection<Connector> Connectors { get; set; }
     }

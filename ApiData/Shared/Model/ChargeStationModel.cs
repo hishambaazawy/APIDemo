@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 
 namespace ApiData.Shared.Model
 {
-    public class GroupModel
+    public class ChargeStationModel
     {
         [JsonProperty("Name")]
         public string Name { get; set; }
-        [JsonProperty("CapacityInAmps")]
-        public int CapacityInAmps { get; set; }
+
+        [JsonProperty("GroupId")]
+        public int GroupId { get; set; }
+       
     }
 }

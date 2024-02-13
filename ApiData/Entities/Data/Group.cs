@@ -21,6 +21,13 @@ namespace ApiData.Entities.Data
         public string Name { get; set; }
         [JsonProperty("CapacityInAmps")]
         public int CapacityInAmps { get; set; }
+
+        [JsonProperty("CreationDate")]
+        public DateTime CreationDate { get; set; }=DateTime.Now;
+
+        [JsonProperty("CreatedBy")]
+        public string CreatedBy { get; set; }
+
         [JsonProperty("ChargeStations")]
         public virtual ICollection<ChargeStation> ChargeStations { get; set; }
     }

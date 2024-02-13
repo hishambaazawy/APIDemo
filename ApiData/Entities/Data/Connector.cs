@@ -14,12 +14,23 @@ namespace ApiData.Entities.Data
     {
         [Key]
         [JsonProperty("ConnectorId")]
-        public int ConnectorId { get; init; } 
-        public int MaxCurrentInAmps { get; set; }
-
+        public int ConnectorId { get; init; }
         [Key]
         [JsonProperty("ChargeStationId")]
         public int ChargeStationId { get; set; }
+        
+        [JsonProperty("MaxCurrentInAmps")]
+        public int MaxCurrentInAmps { get; set; }
+
+        [JsonProperty("Reference")]
+        public string? Reference { get; set; }
+
+        [JsonProperty("CreationDate")]
+        public DateTime CreationDate { get; set; } = DateTime.Now;
+
+        [JsonProperty("CreatedBy")]
+        public string CreatedBy { get; set; }
+
         [JsonProperty("ChargeStation")]
         public virtual ChargeStation? ChargeStation { get; set; }
     }
