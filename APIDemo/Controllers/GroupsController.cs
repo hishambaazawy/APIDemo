@@ -19,8 +19,7 @@ namespace APIDemo.Controllers
     [ApiVersion("1.0")]
     [ApiExplorerSettings(GroupName = "V1")]
     [Route("api/public/v{version:apiVersion}/[controller]")]
-    //  [Authorize(Roles ="Admin,User")]
-    [AllowAnonymous]
+    [Authorize(Roles ="Admin,User")]
     public class GroupsController : ControllerBase
     {
         private readonly ILogger<GroupsController> logger;

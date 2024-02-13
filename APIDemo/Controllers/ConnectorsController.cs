@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using APIDemo.Services;
 using ApiData.Shared;
 using ApiData.Shared.Model;
+using static System.Collections.Specialized.BitVector32;
 
 namespace APIDemo.Controllers
 {
@@ -18,15 +19,13 @@ namespace APIDemo.Controllers
     [ApiVersion("1.0")]
     [ApiExplorerSettings(GroupName = "V1")]
     [Route("api/public/v{version:apiVersion}/[controller]")]
-    //[Authorize(Roles = "Admin,User")]
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin,User")]
     public class ConnectorsController : ControllerBase
     {
         private readonly ILogger<ConnectorsController> logger;
         private readonly LogsService logsService;
         private readonly SmartChargingContext _context;
         private readonly MyHelper helper;
-
         public ConnectorsController(SmartChargingContext context, LogsService logs, ILogger<ConnectorsController> llogger, MyHelper _helper)
         {
             _context = context;
@@ -40,7 +39,6 @@ namespace APIDemo.Controllers
         {
             return new GenericResponse<IEnumerable<Connector>>() { Success = true, Response = await _context.Connectors.ToListAsync(), Message = "Success", StatusCode = StatusCodeEnum.Success };
         }
-
         [HttpGet("GetConnectorById")]
         public async Task<GenericResponse<Connector>> GetConnectorById(int ConnectorId, int ChargeStationId)
         {
@@ -51,7 +49,6 @@ namespace APIDemo.Controllers
             }
             return new GenericResponse<Connector>() { Message = "Success", Success = true, StatusCode = StatusCodeEnum.Success, Response = TatgetConnector };
         }
-
         [HttpGet("GetConnectorByChargeStationId")]
         public async Task<GenericResponse<IEnumerable<Connector>>> GetConnectorByChargeStationId(int ChargeStationId)
         {
@@ -62,7 +59,6 @@ namespace APIDemo.Controllers
             }
             return new GenericResponse<IEnumerable<Connector>>() { Message = "Success", Success = true, StatusCode = StatusCodeEnum.Success, Response = TatgetConnector };
         }
-
         [HttpPost("AddConnector")]
         public async Task<GenericResponse<Connector>> AddConnector(ConnectorModel connectorInput)
         {
@@ -72,7 +68,7 @@ namespace APIDemo.Controllers
                 {
                     return new GenericResponse<Connector>() { Message = "Invalid Input", Success = false, StatusCode = StatusCodeEnum.Warning, Response = null };
                 }
-                var targetStation = await _context.ChargeStations.Where(x => x.ChargeStationId == connectorInput.ChargeStationId).Include(x => x.Connectors).Include(x => x.Group).FirstOrDefaultAsync();
+                var targetStation = await _context.ChargeStations.Where(x => x.ChargeStationId == connectorInput.ChargeStationId).Include(x => x.Connectors).Include(x => x.Group).AsNoTracking().FirstOrDefaultAsync();
                 if (targetStation == null)
                 {
                     return new GenericResponse<Connector>() { Message = "Invalid ChargeStation", Success = false, StatusCode = StatusCodeEnum.Warning, Response = null };
@@ -85,7 +81,18 @@ namespace APIDemo.Controllers
                 {
                     if (await helper.GetGroupConnectorAmps(targetStation.GroupId) + connectorInput.MaxCurrentInAmps <= targetStation.Group.CapacityInAmps)
                     {
-                        var connector = new Connector() { ChargeStationId = connectorInput.ChargeStationId, MaxCurrentInAmps = connectorInput.MaxCurrentInAmps, Reference = connectorInput.Reference, CreatedBy = User.Identity.Name, CreationDate = DateTime.Now };
+                        var ids = await _context.Connectors.Where(x => x.ChargeStationId == connectorInput.ChargeStationId).ToListAsync();
+                        var Max = 1;
+                        if(ids.Any()) {Max=ids.Select(x=>x.ConnectorId).Max() + 1;}
+                        var connector = new Connector()
+                        {
+                            ConnectorId = Max,
+                            ChargeStationId = targetStation.ChargeStationId,
+                            MaxCurrentInAmps = connectorInput.MaxCurrentInAmps,
+                            Reference = connectorInput.Reference,
+                            CreatedBy = User.Identity.Name ?? "*",
+                            CreationDate = DateTime.Now
+                        };
                         await _context.Connectors.AddAsync(connector);
                         await _context.SaveChangesAsync();
                         return new GenericResponse<Connector>() { Message = "Success", Success = true, StatusCode = StatusCodeEnum.Success, Response = connector };
@@ -105,16 +112,15 @@ namespace APIDemo.Controllers
                 return new GenericResponse<Connector>() { Message = "System Error", Success = false, StatusCode = StatusCodeEnum.Error, Response = null };
             }
         }
-
         [HttpPut("UpdateConnector")]
         public async Task<GenericResponse<Connector>> UpdateConnector(int ConnectorId, int ChargeStationId, ConnectorModel connectorInput)
         {
 
-            if (ConnectorId == 0 || ChargeStationId == 0 || connectorInput == null || await _context.ChargeStations.FindAsync(connectorInput.ChargeStationId) == null)
+            if (ConnectorId == 0 || ChargeStationId == 0 || connectorInput == null )
             {
                 return new GenericResponse<Connector>() { Message = "Invalid Input", Success = false, StatusCode = StatusCodeEnum.Warning, Response = null };
             }
-            var target = await _context.Connectors.FirstOrDefaultAsync(x => x.ConnectorId == ConnectorId && x.ChargeStationId == ChargeStationId);
+            var target = await _context.Connectors.Include(x=>x.ChargeStation).ThenInclude(x=>x.Group).FirstOrDefaultAsync(x => x.ConnectorId == ConnectorId && x.ChargeStationId == ChargeStationId);
             if (connectorInput.MaxCurrentInAmps <= 0 || target == null)
             {
                 return new GenericResponse<Connector>() { Message = "Invalid Input", Success = false, StatusCode = StatusCodeEnum.Warning, Response = null };
@@ -122,14 +128,10 @@ namespace APIDemo.Controllers
             await using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                if (await ValidateAmpsCount(ConnectorId, ChargeStationId, connectorInput) == true)
+                if ((await helper.GetGroupConnectorAmps(target.ChargeStation.GroupId) - target.MaxCurrentInAmps) + connectorInput.MaxCurrentInAmps <= target.ChargeStation.Group.CapacityInAmps)
                 {
                     target.MaxCurrentInAmps = connectorInput.MaxCurrentInAmps;
                     target.Reference = connectorInput.Reference;
-                    if (ChargeStationId != connectorInput.ChargeStationId)
-                    {
-                        target.ChargeStationId = connectorInput.ChargeStationId;
-                    }
                     _context.Connectors.Update(target);
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
@@ -140,8 +142,6 @@ namespace APIDemo.Controllers
                     return new GenericResponse<Connector>() { Message = "Invalid Input (Amps value)", Success = false, StatusCode = StatusCodeEnum.Warning, Response = null };
                 }
 
-
-
             }
             catch (Exception exp)
             {
@@ -151,49 +151,6 @@ namespace APIDemo.Controllers
                 return new GenericResponse<Connector>() { Message = "System Error", Success = false, StatusCode = StatusCodeEnum.Error, Response = null };
             }
         }
-
-        private async Task<bool> ValidateAmpsCount(int ConnectorId, int ChargeStationId, ConnectorModel connectorInput)
-        {
-            try
-            {
-                if (ChargeStationId == connectorInput.ChargeStationId)
-                {
-                    var station = await _context.ChargeStations.Include(x => x.Group).Where(x => x.ChargeStationId == ChargeStationId).Include(x => x.Connectors).FirstOrDefaultAsync();
-                    var connectors = station.Connectors.Where(x => x.ConnectorId != ConnectorId).ToList();
-                    var sum = connectors.Select(x => x.MaxCurrentInAmps).Sum();
-                    if (sum + connectorInput.MaxCurrentInAmps <= station.Group.CapacityInAmps)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    var station = await _context.ChargeStations.Include(x => x.Group).Where(x => x.ChargeStationId == connectorInput.ChargeStationId).Include(x => x.Connectors).FirstOrDefaultAsync();
-                    if (station.Connectors.Count() >= 5)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        var sum = station.Connectors.Select(x => x.MaxCurrentInAmps).Sum();
-                        if (sum + connectorInput.MaxCurrentInAmps <= station.Group.CapacityInAmps)
-                        {
-                            return true;
-                        }
-                        else { return false; }
-                    }
-                }
-            }
-            catch (Exception exp)
-            {
-                return false;
-            }
-        }
-
         [HttpDelete("DeleteConnector")]
         public async Task<GenericResponse<bool>> DeleteConnector(int ConnectorId, int ChargeStationId)
         {

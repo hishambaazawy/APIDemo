@@ -14,8 +14,8 @@ namespace ApiData.Shared.Model
 
         [JsonProperty("Reference")]
         public string? Reference { get; set; }
-
+       
         [JsonProperty("ChargeStationId")]
-        public int ChargeStationId { get; set; }
+        public int? ChargeStationId { get; set; }
     }
 }

@@ -18,8 +18,7 @@ namespace APIDemo.Controllers
     [ApiVersion("1.0")]
     [ApiExplorerSettings(GroupName = "V1")]
     [Route("api/public/v{version:apiVersion}/[controller]")]
-    // [Authorize(Roles = "Admin,User")]
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin,User")]
     public class ChargeStationsController : ControllerBase
     {
         private readonly ILogger<ChargeStationsController> logger;
@@ -126,7 +125,7 @@ namespace APIDemo.Controllers
                     }
                     else 
                     {
-                        var sumGroupStationConnectors =  await helper.GetGroupConnectorAmps(station.GroupId);
+                        var sumGroupStationConnectors =  await helper.GetGroupConnectorAmps(stationInput.GroupId);
                         var sumCurrentStationConnector = station.Connectors.Select(x => x.MaxCurrentInAmps).Sum();
                         if ((group.CapacityInAmps - (sumGroupStationConnectors + sumCurrentStationConnector)) >= 0)
                         {
