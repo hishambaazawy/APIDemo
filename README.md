@@ -17,15 +17,6 @@ This demo is connected to a cloud-hosted SQL Server database. To connect to a lo
 3. Rebuild the solution by running the `dotnet build` command.
 4. Run the application using `dotnet run`.
 
-## Default Login Credentials
-
-To access secured endpoints, use the following default login credentials:
-
-```json
-{
-  "email": "hisham.baazawy@gmail.com",
-  "password": "wYX%0<|HK09"
-}
 
 
 ## Authentication
@@ -48,3 +39,13 @@ Execute dotnet restore to restore necessary packages.
 Follow the database connection setup if configuring for a local database.
 Run dotnet run to start the application.
 Access Swagger UI by navigating to https://localhost:7149/swagger (adjust the port as necessary) if in Development or Staging environment.
+
+## Default Login Credentials
+
+To access secured endpoints, use the following default login credentials:
+
+```json
+{
+  "email": "hisham.baazawy@gmail.com",
+  "password": "wYX%0<|HK09"
+}.
