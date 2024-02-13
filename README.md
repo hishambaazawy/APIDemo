@@ -1,7 +1,13 @@
 # APIDemo
-Demo website http://katarabeach-001-site2.anytempurl.com/swagger/index.html
 Default Environments config IS Development 
-swagger docs enabled only for Development os staging  
+swagger docs enabled only for Development os Staging  
+
+this demo is connencted to database on the cloud (sqlserver),
+to  connect localy user the following steps 
+1- create   local database on your computer (sqlserver )
+2- change connection string in the appsettings file .
+3 -rebuild 
+4 - run 
 -------------------------------------------
 default login 
 {
@@ -11,4 +17,3 @@ default login
 ------------------------------------------
 use AccountController/Login to get token  then used on the authorization 
 all action Require User Role or admin 
-if you need to change 
