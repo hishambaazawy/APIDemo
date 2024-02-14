@@ -40,6 +40,9 @@ Follow the database connection setup if configuring for a local database.
 Run dotnet run to start the application.
 Access Swagger UI by navigating to https://localhost:7149/swagger (adjust the port as necessary) if in Development or Staging environment.
 
+##  LiveDemo 
+http://katarabeach-001-site2.anytempurl.com/swagger/index.html
+
 ## Default Login Credentials
 
 To access secured endpoints, use the following default login credentials:
